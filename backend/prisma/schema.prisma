@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = process.env.DB_URL
+}
+
+model User {
+  id       String   @id @default(uuid())
+  username String   @unique
+  email    String   @unique
+  password String
+  frozen   Boolean  @default(false) // Indicates if the account is frozen
+  Wallet   Wallet?  // A user can have only one wallet
+}
+
+model Wallet {
+  id       String        @id @default(uuid())
+  userId   String        @unique // Ensures each user has only one wallet
+  balance  Float
+  frozen   Boolean       @default(false) // Indicates if the wallet is frozen
+  User     User          @relation(fields: [userId], references: [id])
+  Transaction Transaction[]
+}
+
+model Transaction {
+  id             String    @id @default(uuid())
+  walletId       String
+  type           String    // Either 'credit' or 'debit'
+  amount         Float
+  category       String
+  isRecurring    Boolean   @default(false) // Indicates if the transaction is recurring
+  recurrenceType String?   // 'daily', 'weekly', 'monthly', etc. (null if not recurring)
+  recurrenceEnd  DateTime? // End date for recurring transactions
+  createdAt      DateTime  @default(now())
+  Wallet         Wallet    @relation(fields: [walletId], references: [id])
+}
+
